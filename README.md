@@ -1,6 +1,6 @@
 # 🚀 Trivia Game - Plaza Cielo Tierra
 
-This repository contains the production-ready source code and assets for the **Plaza Cielo Tierra** science museum interactive trivia game. Designed as a cross-platform simulation, the project integrates **Unity UI Toolkit** with a **Supabase** backend to provide a seamless, real-time competitive experience.
+This repository contains the production-ready source code and assets for the **Plaza Cielo Tierra** science museum interactive trivia game (client app). Designed as a cross-platform simulation, the project integrates **Unity UI Toolkit** with a **Supabase** backend to provide a seamless, real-time competitive experience.
 
 ---
 
