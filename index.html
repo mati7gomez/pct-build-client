@@ -6,10 +6,35 @@
     <title>Unity Web Player | Plaza Cielo Tierra Trivia</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
+    
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; 
+        position: fixed;  
+        top: 0;
+        left: 0;
+        touch-action: none; 
+        background-color: #000;
+      }
+
+      #unity-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      #unity-canvas {
+        display: block;
+      }
+    </style>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=720 height=1280 tabindex="-1"></canvas>
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
         <div id="unity-progress-bar-empty">
@@ -17,14 +42,15 @@
         </div>
       </div>
       <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
+      <div id="unity-footer" style="display: none;"> <div id="unity-logo-title-footer"></div>
         <div id="unity-fullscreen-button"></div>
         <div id="unity-build-title">Plaza Cielo Tierra Trivia</div>
       </div>
     </div>
+    
     <script>
       var canvas = document.querySelector("#unity-canvas");
+      var container = document.querySelector("#unity-container");
 
       // Shows a temporary message banner/ribbon for a few seconds, or
       // a permanent error message on top of the canvas if type=='error'.
@@ -52,61 +78,58 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/BuildCliente.loader.js";
+      var loaderUrl = buildUrl + "/Build-PCT-client.loader.js";
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/BuildCliente.data.unityweb",
-        frameworkUrl: buildUrl + "/BuildCliente.framework.js.unityweb",
-        codeUrl: buildUrl + "/BuildCliente.wasm.unityweb",
+        dataUrl: buildUrl + "/Build-PCT-client.data.unityweb",
+        frameworkUrl: buildUrl + "/Build-PCT-client.framework.js.unityweb",
+        codeUrl: buildUrl + "/Build-PCT-client.wasm.unityweb",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "Iki Entertainment",
         productName: "Plaza Cielo Tierra Trivia",
         productVersion: "0.1",
         showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
       };
-
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         // Mobile device style: fill the whole browser client area with the game canvas:
-
         var meta = document.createElement('meta');
         meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        // interactive-widget=overlays-content prevents the browser from resizing the window when the keyboard opens
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes, interactive-widget=overlays-content';
         document.getElementsByTagName('head')[0].appendChild(meta);
         document.querySelector("#unity-container").className = "unity-mobile";
         canvas.className = "unity-mobile";
+        
+        // This line is CRITICAL. It prevents the hitbox offset bug when users enable "Desktop Mode" on mobile.
+        config.devicePixelRatio = 1;
 
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-
-      } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "720px";
-        canvas.style.height = "1280px";
       }
+
+      // --- NEW DYNAMIC RESIZE LOGIC ---
+      // This function asks the browser for the exact visible pixels right now, excluding the URL bar.
+      function resizeUnityContainer() {
+        var w = window.innerWidth + "px";
+        var h = window.innerHeight + "px";
+        
+        container.style.width = w;
+        container.style.height = h;
+        canvas.style.width = w;
+        canvas.style.height = h;
+      }
+
+      // Run it immediately
+      resizeUnityContainer();
+
+      // Listen for standard window resizing
+      window.addEventListener('resize', resizeUnityContainer);
+
+      // Listen for the Visual Viewport API (Supported by modern Chrome/iOS Safari)
+      // This fires when the URL bar shrinks/expands or the keyboard appears
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', resizeUnityContainer);
+      }
+      // --------------------------------
 
       document.querySelector("#unity-loading-bar").style.display = "block";
 
